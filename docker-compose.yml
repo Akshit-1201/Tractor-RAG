@@ -20,6 +20,14 @@ services:
     command: sh -c "alembic upgrade head && python -m scripts.seed_admin && uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
     environment:
       WATCHFILES_FORCE_POLLING: "true" # reliable file-watching on Docker Desktop (Windows) mounts
+    # Migrations + admin seed run before uvicorn binds :8000. This gate stops the
+    # frontend proxy from firing before the API is actually serving (avoids the
+    # ECONNREFUSED race that made the admin content page load empty on first boot).
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/api/health')\""]
+      interval: 3s
+      timeout: 3s
+      retries: 30
     depends_on:
       db:
         condition: service_healthy # never run migrations before Postgres is ready
@@ -36,7 +44,8 @@ services:
       VITE_MAX_QUESTION_CHARS: ${MAX_QUESTION_CHARS:-1000} # client input cap follows .env
       CHOKIDAR_USEPOLLING: "true" # reliable Vite HMR on Docker Desktop (Windows) mounts
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy # wait until the API is serving, not just started
     volumes:
       - ./frontend:/app
       - /app/node_modules # keep image-installed deps; host dir has none
