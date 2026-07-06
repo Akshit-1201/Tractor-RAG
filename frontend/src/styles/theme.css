@@ -1,0 +1,164 @@
+/* ============================================================================
+   Tractor Maintenance Assistant — design tokens & base layer
+   Direction: "service console / instrument cluster". Charcoal steel structure,
+   safety-amber accent, and a red/amber/green status-lamp language borrowed from
+   a tractor dashboard. Two themes: night dash (dark) and workshop daylight
+   (light). The theme is stamped on <html data-theme> before first paint.
+   ============================================================================ */
+
+:root {
+  --font-display: "Saira", "IBM Plex Sans", system-ui, sans-serif;
+  --font-sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+
+  --r-1: 6px;
+  --r-2: 10px;
+  --r-3: 16px;
+
+  --step: 0.9rem;
+  --pad: clamp(1rem, 4vw, 1.75rem);
+
+  --z-base: 0;
+  --z-raised: 10;
+  --z-sticky: 20;
+  --z-overlay: 30;
+
+  --dur: 180ms;
+  --ease: cubic-bezier(0.2, 0.6, 0.2, 1);
+}
+
+/* ---- Night dash (dark) --------------------------------------------------- */
+:root[data-theme="dark"] {
+  --bg: #14181b;
+  --bg-2: #10151a;
+  --panel: #1e252a;
+  --panel-2: #252e34;
+  --inset: #181e22;
+  --line: #2e373e;
+  --line-2: #3b464e;
+
+  --ink: #e9eef0;
+  --ink-2: #a4afb7;
+  --ink-3: #6d7981;
+
+  --brand: #f6a821; /* safety amber — the one bold colour */
+  --brand-ink: #1a1204; /* text that sits on amber */
+  --brand-strong: #f6a821; /* amber text/icons (legible on dark) */
+  --brand-tint: rgba(246, 168, 33, 0.14);
+
+  --ok: #4fb35b;
+  --warn: #f0b23e;
+  --crit: #e45a40;
+  --steel: #6d8896;
+
+  --grid: rgba(255, 255, 255, 0.022);
+  --bezel-top: rgba(255, 255, 255, 0.05);
+  --shadow-1: 0 1px 0 rgba(255, 255, 255, 0.03) inset, 0 6px 18px -12px rgba(0, 0, 0, 0.7);
+  --shadow-2: 0 1px 0 rgba(255, 255, 255, 0.04) inset, 0 22px 48px -24px rgba(0, 0, 0, 0.75);
+  --ring: rgba(246, 168, 33, 0.55);
+}
+
+/* ---- Workshop daylight (light) ------------------------------------------- */
+:root[data-theme="light"] {
+  --bg: #e7ecee;
+  --bg-2: #dfe5e8;
+  --panel: #ffffff;
+  --panel-2: #f1f5f6;
+  --inset: #eef3f4;
+  --line: #d4dbdf;
+  --line-2: #c1cbd0;
+
+  --ink: #161e26;
+  --ink-2: #465059;
+  --ink-3: #6f7a82;
+
+  --brand: #e08a0b;
+  --brand-ink: #1a1204;
+  --brand-strong: #a4650a; /* amber dark enough for text on light */
+  --brand-tint: rgba(224, 138, 11, 0.12);
+
+  --ok: #2e8b3d;
+  --warn: #b9791a;
+  --crit: #c23a26;
+  --steel: #3f5a67;
+
+  --grid: rgba(20, 30, 40, 0.03);
+  --bezel-top: rgba(255, 255, 255, 0.9);
+  --shadow-1: 0 1px 2px rgba(16, 24, 32, 0.06), 0 8px 22px -14px rgba(16, 24, 32, 0.22);
+  --shadow-2: 0 1px 2px rgba(16, 24, 32, 0.08), 0 24px 48px -26px rgba(16, 24, 32, 0.28);
+  --ring: rgba(224, 138, 11, 0.45);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: var(--bg);
+  /* Faint blueprint grid — a nod to service-manual paper, kept near-invisible. */
+  background-image:
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 30px 30px;
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.15;
+  margin: 0;
+}
+
+a {
+  color: inherit;
+}
+
+button,
+input,
+textarea {
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+}
+
+/* Consistent, visible keyboard focus everywhere. */
+:where(a, button, input, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+  border-radius: var(--r-1);
+}
+
+::selection {
+  background: var(--brand-tint);
+}
+
+/* A monospaced token treatment for part numbers, codes, metrics. */
+.mono {
+  font-family: var(--font-mono);
+  font-feature-settings: "tnum" 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}

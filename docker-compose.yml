@@ -1,0 +1,48 @@
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_DB: tractor
+      POSTGRES_PASSWORD: postgres
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d tractor"]
+      interval: 2s
+      timeout: 3s
+      retries: 20
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  backend:
+    build: ./backend
+    env_file: .env
+    # Startup sequence (spec §18): migrate -> seed admin -> serve. --reload +
+    # the bind mount below make code edits apply without rebuilding the image.
+    command: sh -c "alembic upgrade head && python -m scripts.seed_admin && uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
+    environment:
+      WATCHFILES_FORCE_POLLING: "true" # reliable file-watching on Docker Desktop (Windows) mounts
+    depends_on:
+      db:
+        condition: service_healthy # never run migrations before Postgres is ready
+    volumes:
+      - ./backend:/app
+      - storage:/data/storage
+    ports:
+      - "8000:8000"
+
+  frontend:
+    build: ./frontend
+    environment:
+      BACKEND_ORIGIN: http://backend:8000 # vite dev proxy target (spec §11.4)
+      VITE_MAX_QUESTION_CHARS: ${MAX_QUESTION_CHARS:-1000} # client input cap follows .env
+      CHOKIDAR_USEPOLLING: "true" # reliable Vite HMR on Docker Desktop (Windows) mounts
+    depends_on:
+      - backend
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules # keep image-installed deps; host dir has none
+    ports:
+      - "5173:5173"
+
+volumes:
+  pgdata:
+  storage:
