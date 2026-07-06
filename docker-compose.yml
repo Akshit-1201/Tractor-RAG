@@ -17,7 +17,10 @@ services:
     env_file: .env
     # Startup sequence (spec §18): migrate -> seed admin -> serve. --reload +
     # the bind mount below make code edits apply without rebuilding the image.
-    command: sh -c "alembic upgrade head && python -m scripts.seed_admin && uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
+    # seed_content_on_boot runs detached (&): it waits for the API, then seeds the
+    # default demo corpus only if the DB is empty (fresh build). Backgrounding it
+    # keeps uvicorn/healthcheck fast and never blocks boot on OpenAI.
+    command: sh -c "alembic upgrade head && python -m scripts.seed_admin && (python -m scripts.seed_content_on_boot &) && uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
     environment:
       WATCHFILES_FORCE_POLLING: "true" # reliable file-watching on Docker Desktop (Windows) mounts
     # Migrations + admin seed run before uvicorn binds :8000. This gate stops the
